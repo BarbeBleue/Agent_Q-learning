@@ -30,9 +30,11 @@ To move the agent use:
 To exit use:
 'x'
 
+## Minor bugs
+* Fix the nparray / list conflict 
 
 ## Authors
 
 * **Maëva A.** - [BarbeBleue](https://github.com/barbebleue)
 
-* **Jacques Z.** 
+* **Jacques Z.** - [Jaquapi](https://github.com/jacqueszhong)

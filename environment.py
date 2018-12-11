@@ -7,6 +7,8 @@ import random
 import math
 import vect
 
+DEBUG = 1
+
 class Environment:
 
     """
@@ -39,6 +41,9 @@ class Environment:
         if self.food_counter<15:
             self.charge_food()
 
+    def generate_map(self,nbMap,folder):
+        print("Generating maps")
+
     def save_map(self,name):
         """
         String -> null
@@ -69,6 +74,13 @@ class Environment:
             for c in l:
                 if c=='$':
                     self.food_counter+=1
+
+    def save_step(self,n):
+        self.agent.save_step(n)
+
+    def load_step(self,filename):
+        self.agent.load_step(filename)
+        
         
     def charge_food(self):
         """
@@ -104,7 +116,69 @@ class Environment:
             str2=str2+"H"
         print(str2)
 
-    def update(self,direction):
+
+    """ Meta meta functions """
+    def run_manual(self):
+        #Variable to save the input of the player
+        c_input=''
+        #Variable to follow the state of the game
+        game_state=0
+
+        #Loop of the game
+        while c_input!='x' and game_state==0:
+            #Show the map on the terminal
+            self.show()
+            #Ask the player
+            print("Press z, q, s or d to move or x to exit:")
+            c_input=input()
+            #Update the simulation
+            if c_input in ['z','q','s','d']:
+                #game_state=env.update_manual(c_input)
+                game_state = self.update_manual()
+
+        #End of the game
+        if game_state==-1:
+            print("Loser")
+        if game_state==1:
+            print("Winner")   
+
+    def run_simulation(self):
+        game_state = 0
+        step = 0
+        #Loop of the game
+        while game_state == 0:
+            self.show()
+            game_state = self.update_q()
+
+
+        self.save_step(step)
+        step += 1
+
+    def run_simulations(self,maxstep,offsetstep = 0):
+        step=0 + offsetstep
+
+        while (step<maxstep):
+
+
+            self.run_simulation()
+
+            self.save_step(step)
+            self.reset()
+
+
+            step += 1
+
+
+    def reset(self):
+        self.map = []
+        self.food_counter=0
+        self.init_map()
+        self.enemies = [[1,12],[6,12],[6,6],[6,18]]
+        self.agent.reset()
+
+
+    """ Meta functions """
+    def update_manual(self,direction):
         """
         Char->Int
         Update all the elements of the environment
@@ -115,28 +189,92 @@ class Environment:
         state=True
         #print("x: {0} y: {1}".format(x,y))
         if direction == "q": #move west
+            self.agent.action = 3
             y -= 1
         elif direction == "d": #move east
+            self.agent.action = 1
             y += 1
         elif direction == "z": #move north
+            self.agent.action = 0
             x -= 1
         elif direction == "s": #move south
+            self.agent.action = 2
             x += 1
         #print("x: {0} y: {1}".format(x,y))   
-        self.agent.detect(self.map,self.size)    
+
+        status, reward, new_input_vec = self.step(x,y)
+
+        return status
+
+
+    def update_q(self):
+        status = 0 # 0=nothing special, -1=dead, 1=got all food
+        
+        # Agent selects an action
+        input_vec = self.agent.compute_input_vec(self.map, self.size,self.enemies)
+        action = self.agent.select_action(input_vec)
+
+        # Environnement performs the action
+        x=self.agent.pos[0]
+        y=self.agent.pos[1]
+        if action == 0 : #north
+            x -= 1
+        elif action == 1 : #east
+            y += 1
+        elif action == 2 : #south
+            x += 1
+        elif action == 3 : #west
+            y -= 1
+        else :
+            print("(update_q) ERROR, unknown action " + str(action))
+
+        #self.move_agent(x,y)
+        
+        #Performs one environnement step
+        status, reward, new_input_vec = self.step(x,y)
+
+        #Agent adjusts its network
+        self.agent.adjust_network(new_input_vec,reward)
+
+        return status
+
+    """ Environnement simulation """
+    def step(self,x,y):
+
+        reward = 0
+        status = 0
+
+        #Move the agent
         if x>=0 and x<self.size and y>=0 and y<self.size and self.map[x][y]!='O':
+            self.agent.has_collided = False
             self.agent.move(x,y)
             if self.map[x][y]=='$':
                 self.agent.eat()
                 self.map[x][y]=" "
-                self.food_counter-=1
-                #print(self.food_counter)
-        if ([x,y] in self.enemies) or self.agent.energy==0:
-            return -1
+                self.food_counter-=1  
+                reward = 0.4
+        else : 
+            self.agent.has_collided = True
+
+        #Check game status, reward
+        if ([x,y] in self.enemies) or self.agent.energy==0: 
+            status = -1
+            reward = -1
         elif self.food_counter==0:
-            return 1
+            status = 1
         else:
-            return self.move_all_ennemies() 
+            status = self.move_all_ennemies()
+            if status == -1:
+                reward = -1
+
+        #Compute agent new state
+        new_input_vec = self.agent.compute_input_vec(self.map, self.size, self.enemies)
+
+        if DEBUG :
+            print("LEAVING environment.step : \n\t status={0}\n\t reward={1}\n\tnew_input_vec={2}".format(status,reward,new_input_vec))
+
+        return (status,reward, new_input_vec)
+       
         
     def move_all_ennemies(self):
         """
@@ -199,7 +337,6 @@ class Environment:
         move=P.index(max(P))
         self.enemies[n][0]=e[0]+action[move][0]
         self.enemies[n][1]=e[1]+action[move][1]
-
     
 def t(dist):
     """
