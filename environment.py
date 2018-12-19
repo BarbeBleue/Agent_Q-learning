@@ -10,10 +10,7 @@ import time
 import timeit
 
 DEBUG = 0
-<<<<<<< HEAD
-=======
 DEBUG_REPLAY = 0
->>>>>>> 53b868524ca6f4b445b7806d5328c92d62e6905b
 HARDCORE_LEVEL = 0
 
 class Environment:

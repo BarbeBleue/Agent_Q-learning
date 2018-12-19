@@ -12,8 +12,6 @@ import time
 
 DEBUG = 0
 
-<<<<<<< HEAD
-=======
 def centered_sigmoid(x):
 	""" Customized activation function """
 	return (backend.sigmoid(x)) - 0.5
@@ -36,7 +34,6 @@ def my_loss(ytrue,ypred):
 	"""Loss function described in article. """
 
 	return (ytrue - ypred)*(ytrue - ypred)
->>>>>>> 53b868524ca6f4b445b7806d5328c92d62e6905b
 
 class AgentBrain :
 
@@ -51,15 +48,12 @@ class AgentBrain :
 	_T_inv_min = 20  # Inverse of temperature
 	_T_inv_max = 60  # Max value of the inverse of temperature
 	_discount = 0.9
-<<<<<<< HEAD
 	_momentum = 0.9  # Momentum factor of the backpropagation algorithm
 	_lr = 0.01  # Learning rate of the backpropagation algorithm
 	_r_w = 0.1  # Range of the initial weights
-=======
 	_momentum = 0.9 # Momentum factor of the backpropagation algorithm
 	_lr = 0.05 # Learning rate of the backpropagation algorithm
 	_r_w = 0.1 # Range of the initial weights
->>>>>>> 53b868524ca6f4b445b7806d5328c92d62e6905b
 
 	_learning = True
 
@@ -303,11 +297,6 @@ class AgentBrain :
 
 		#Fit previous state prediction with new state target
 		self._model.fit(input_vecs[action].reshape(1,self._nbInput),np.array(target), epochs=1, verbose=0)
-
-<<<<<<< HEAD
-=======
-
->>>>>>> 53b868524ca6f4b445b7806d5328c92d62e6905b
 	def reduce_temperature(self):
 		if self._T_inv < self._T_inv_max:
 			self._T_inv *= 1.05
