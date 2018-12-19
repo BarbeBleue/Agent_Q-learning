@@ -47,21 +47,21 @@ class Agent:
 
     def compute_input_vec(self, e_map, e_size, enemies):
         """
-        Return the input representation given some information about the environement.
+        Return the input representation given some information about the environment.
 
         :return: numpy.ndarray, shape (1x145)
         """
 
-        #Observe environnement
-        self.detect(e_map,e_size, enemies)
+        #Observe environment
+        self.detect(e_map, e_size, enemies)
 
         #Constructs state vector
         #Sensors input units
-        input_vec = np.zeros(145,np.int)
+        input_vec = np.zeros(145, np.int)
         i = 0
         for f in self.food_sensor:
             input_vec[i] = f.response
-            i+=1
+            i += 1
 
         for e in self.enemies_sensor:
             input_vec[i] = e.response
@@ -77,7 +77,7 @@ class Agent:
             ind = 15
         input_vec[124 + ind] = 1
 
-        #History input units
+        #History input units. N->E->S->W
         if self.action != -1 :
             input_vec[140 + self.action] = 1
 
@@ -91,7 +91,8 @@ class Agent:
         """
         Wrapper of AgentBrain.select_action
         """
-        return self.brain.select_action(input_vec)
+        self.action = self.brain.select_action(input_vec)
+        return self.action
 
     def adjust_network(self,new_input_vec,reward):
         """
@@ -99,26 +100,47 @@ class Agent:
         """
         self.brain.adjust_network(new_input_vec, reward)
 
-    def save_step(self,step):
+    def is_on_policy(self,input_vec,action):
+
+        return self.brain.is_on_policy(input_vec,action)
+
+    def adjust_network_replay(self,input_vec,action,new_input_vec,reward):
+        """
+        Wrapper of AgentBrain.adjust_network_replay
+        """
+        self.brain.adjust_network_replay(input_vec,action,new_input_vec,reward)
+
+
+
+    def save_nn(self,path,name):
         """ Wrapper of agent_brain.savew """
-        name = "Hidden"+str(self.brain.get_nbHidden())+"_Step" + str(step) + "_"
         s = str(time.time())
         s = s.replace(".","")
-        s = s[4:]
-        name = "NN_save/" + name + s + ".h5"
-        self.brain.savew(name)
-        self.brain.savew("NN_save/quicksave.h5")
+        s = s[4:13]
 
-    def load_step(self,filename):
+        n = str(name) + "Hid=" + str(self.brain.get_nbHidden())
+        n = path + s + n + ".h5"
+        self.brain.savew(n)
+        self.brain.savew(path+"quicksave.h5")
+
+    def load_nn(self,filename):
         """ Wrapper of agent_brain.loadw """
+
         self.brain.loadw(filename)
+
+    """
+        try :
+            self.brain.loadw(filename)
+        except ValueError :
+            print("ERROR - agent.load_step : couldn't load {0}".format(filename) )
+            time.sleep(5)
+    """
 
     def reset(self):
         self.has_collided = False
         self.action = -1
         self.pos = [18,12]
         self.energy = 40
-        
         self.brain.reset()
 
 

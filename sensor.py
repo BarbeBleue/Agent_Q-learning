@@ -1,6 +1,8 @@
 
 """This module contains the Sensor class"""
 
+DEBUG = 0
+
 
 class Sensor:
 
@@ -21,9 +23,9 @@ class Sensor:
 
     def __repr__(self):
         #return "(T:{0}  F:{1} Pos:{2}  ON? {3})".format(self.type_s,self.field,self.pos,self.response)
-        return "{2}".format(self.type_s,self.field,self.pos,self.response)
+        return "{2}".format(self.type_s, self.field, self.pos, self.response)
 
-    def detect(self,a_pos,e_map,size,enemies):
+    def detect(self, a_pos, e_map, size, enemies):
         """
         [Int,Int]*List[List[Char]*Int
         Look if the sensor detect something of type self.type in the map e_map
@@ -33,42 +35,48 @@ class Sensor:
         x=a_pos[0]+self.pos[0]
         y=a_pos[1]+self.pos[1]
 
-        self.response=self.detect_xy(e_map,[x,y],size,enemies) #Test sensor position
+        self.response = self.detect_xy(e_map, [x,y], size, enemies)  #Test sensor position
         
         if self.response:
             return
-        if self.field!='o':
-            area=[[-1,0],[0,-1],[1,0],[0,1]] # X
+        if self.field != 'o':
+            area = [[-1, 0], [0, -1], [1, 0], [0, 1]]  # X
             
-            if self.field!='X':
-                area=area+[[-1,-1],[1,-1],[1,1],[-1,1]] # O
+            if self.field != 'X':
+                area = area+[[-1, -1], [1, -1], [1, 1], [-1, 1]]  # O
             
-                if self.field!='O':
-                    area=area+[[-2,0],[0,-2],[2,0],[0,2]] # Y
-        else: # o           
+                if self.field != 'O':
+                    area = area+[[-2, 0], [0, -2], [2, 0], [0, 2]]  # Y
+        else:  # o
             return
 
-        i=0 
-        while not self.response and i<len(area):
-            x=a_pos[0]+self.pos[0]+area[i][0]
-            y=a_pos[1]+self.pos[1]+area[i][1]
-            self.response=self.detect_xy(e_map,[x,y],size,enemies)
-            i+=1
+        i = 0
+        while not self.response and i < len(area):
+            x = a_pos[0]+self.pos[0]+area[i][0]
+            y = a_pos[1]+self.pos[1]+area[i][1]
+            self.response = self.detect_xy(e_map, [x, y], size, enemies)
+            i += 1
 
         #print("{0}, {1}, {2}".format(x,y))
 
-    def detect_xy(self,e_map,coord,size,enemies):
+    def detect_xy(self, e_map, coord, size, enemies):
         """
         Look if the sensor detect something of type self.type in e_map at coord
         """
-        x=coord[0]
-        y=coord[1]
-        if x>=0 and x<size and y>=0 and y<size:
+        x = coord[0]
+        y = coord[1]
+        if 0 <= x < size and 0 <= y < size:
 
-            if self.type_s == 'E' and coord in enemies : #Enemy sensor
+            if self.type_s == 'E' and coord in enemies:  #Enemy sensor
+                if DEBUG:
+                    print("Enemy detected in {0} by sensor in {1} of field {2}".format(str(coord), str(self.pos),
+                                                                                       str(self.field)))
                 return True
 
-            elif e_map[x][y]==self.type_s: #Food / obstacle sensor
+            elif e_map[x][y] == self.type_s:  #Food / obstacle sensor
+                if DEBUG:
+                    print("{0} detected in {1} by sensor in {2} of field {3}".format(str(self.type_s), str(coord),
+                                                                                     str(self.pos), str(self.field)))
                 return True
 
         return False
