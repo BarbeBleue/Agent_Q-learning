@@ -7,8 +7,13 @@ import random
 import math
 import vect
 import time
+import timeit
 
 DEBUG = 0
+<<<<<<< HEAD
+=======
+DEBUG_REPLAY = 0
+>>>>>>> 53b868524ca6f4b445b7806d5328c92d62e6905b
 HARDCORE_LEVEL = 0
 
 class Environment:
@@ -194,7 +199,11 @@ class Environment:
         status = 0 # 0=nothing special, -1=dead, 1=got all food
 
         # Agent selects an action
-        input_vec = self.agent.compute_input_vec(self.map, self.size,self.enemies)
+        if not (self.agent.brain._input_vectors):
+            input_vec = self.agent.compute_input_vec(self.map, self.size,self.enemies)
+        else:
+            input_vec = self.agent.brain._input_vectors[0]        
+
         action= self.agent.select_action(input_vec)
 
         # Environment performs the action
@@ -226,7 +235,12 @@ class Environment:
         Action part
         """
         # Agent selects an action
-        input_vec = self.agent.compute_input_vec(self.map, self.size,self.enemies)
+        if not (self.agent.brain._input_vectors):
+            input_vec = self.agent.compute_input_vec(self.map, self.size,self.enemies)
+        else:
+            input_vec = self.agent.brain._input_vectors[0]
+
+
         action = self.agent.select_action(input_vec)
         input_vecs = self.agent.brain._input_vectors
 
@@ -255,8 +269,8 @@ class Environment:
         """
         Replay part
         """
-        max_stock = 6
-        nb_replay = 2
+        max_stock = 8
+        nb_replay = 0
 
         #Save experiences into lesson
         self.current_lesson.append((input_vecs,action,new_input_vecs,reward))
@@ -268,10 +282,12 @@ class Environment:
         m = len(self.lesson_bank)
         if m > nb_replay:
             m = nb_replay
+
         replayed_lessons = random.sample(self.lesson_bank,m)
 
         #print("replayed="+str(replayed_lessons))
-        print("Replaying "+str(m)+" lessons, on "+str(len(self.lesson_bank))+" available.")
+        if DEBUG_REPLAY :
+            print("Replaying "+str(m)+" lessons, on "+str(len(self.lesson_bank))+" available.")
 
         #Learn on pas lessons
         for lesson in replayed_lessons:
